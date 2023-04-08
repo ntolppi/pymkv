@@ -1,33 +1,42 @@
-import json
-import subprocess,
-import os
+import subprocess, os
 from multiprocessing import Pool
-from pprint import pp
 
 from makemkv import MakeMKV, ProgressParser
 
 
-def get_disc_info(disc):
+def create_mkv(drive_path):
+    drive, path = drive_path
+    disc = os.path.join('/mnt', drive)
     with ProgressParser() as progress:
         makemkv = MakeMKV(disc, progress_handler=progress.parse_progress)
-        makemkv.mkv('all', )
+        makemkv.mkv('all', path)
 
 
-def get_labels(drive):
+def create_dir(drive, base_path='/mnt/c/Users/ntolp/Videos/'):
     p = subprocess.Popen(['powershell.exe', '-c', f'(Get-Volume {drive}).FileSystemLabel'], stdout=subprocess.PIPE)
-    return p.stdout.read().strip()
+    label =  str(p.stdout.read().strip())
 
+    path = os.path.join(base_path, label)
 
-def create_dir(label, base_path='/mnt/c/Users/ntolp/Videos/'):
-    pass
+    # Get list of directories in base path
+    os_walk = os.walk(base_path)
+    dir_list = next(os_walk)[1]
+
+    # Check if label in base path
+    if label not in dir_list:
+        for d in dir_list:
+            if d in label:
+                path = os.path.join(base_path, d, label)
+                break
+
+        # Create directory
+        os.mkdir(path)
+    return drive, path
 
 
 drives = ['d', 'e']
+with Pool() as pool:
+    paths = pool.map(create_dir, drives)
 
 with Pool() as pool:
-    drive_paths = [f'/mnt/{drive}' for drive in drives]
-    info = pool.map(get_disc_info, drive_paths)
-
-with open('disc_info.json', 'w') as disc_info:
-    json.dump(info, disc_info)
-print("Done getting disc info!")
+    info = pool.map(create_mkv, paths)
