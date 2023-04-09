@@ -8,13 +8,13 @@ def create_mkv(drive_path):
     drive, path = drive_path
     disc = os.path.join('/mnt', drive)
     with ProgressParser() as progress:
-        makemkv = MakeMKV(disc, progress_handler=progress.parse_progress)
+        makemkv = MakeMKV(disc, minlength=120, progress_handler=progress.parse_progress)
         makemkv.mkv('all', path)
 
 
 def create_dir(drive, base_path='/mnt/c/Users/ntolp/Videos/'):
     p = subprocess.Popen(['powershell.exe', '-c', f'(Get-Volume {drive}).FileSystemLabel'], stdout=subprocess.PIPE)
-    label =  str(p.stdout.read().strip())
+    label =  p.stdout.read().strip().decode()
 
     path = os.path.join(base_path, label)
 
