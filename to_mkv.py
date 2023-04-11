@@ -7,14 +7,13 @@ from makemkv import MakeMKV, ProgressParser
 def create_mkv(drive_path):
     drive, path = drive_path
     disc = os.path.join('/mnt', drive)
-    with ProgressParser() as progress:
-        makemkv = MakeMKV(disc, minlength=120, progress_handler=progress.parse_progress)
-        makemkv.mkv('all', path)
+    makemkv = MakeMKV(disc, minlength=120)
+    makemkv.mkv('all', path)
 
 
 def create_dir(drive, base_path='/mnt/c/Users/ntolp/Videos/'):
     p = subprocess.Popen(['powershell.exe', '-c', f'(Get-Volume {drive}).FileSystemLabel'], stdout=subprocess.PIPE)
-    label =  p.stdout.read().strip().decode()
+    label = p.stdout.read().strip().decode()
 
     path = os.path.join(base_path, label)
 
@@ -24,13 +23,9 @@ def create_dir(drive, base_path='/mnt/c/Users/ntolp/Videos/'):
 
     # Check if label in base path
     if label not in dir_list:
-        for d in dir_list:
-            if d in label:
-                path = os.path.join(base_path, d, label)
-                break
-
         # Create directory
         os.mkdir(path)
+
     return drive, path
 
 
